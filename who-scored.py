@@ -393,6 +393,122 @@ intercpetions_home = soup.find('li', {'data-filter-index': '4'})('span')[0].get_
 
 intercpetions_away = soup.find('li', {'data-filter-index': '4'})('span')[2].get_text()
 
+# CLEARANCES
+
+# Clearances -> Outcome -> Total
+clear_outcome_total_home = soup.find(
+    'div', {'data-filter-index': '5_0_0'})('span')[0].get_text()
+
+clear_outcome_total_away = soup.find(
+    'div', {'data-filter-index': '5_0_0'})('span')[1].get_text()
+
+# Clearances -> Outcome -> Off The Line
+clear_outcome_otl_home = soup.find(
+    'div', {'data-filter-index': '5_0_1'})('span')[0].get_text()
+
+clear_outcome_otl_away = soup.find(
+    'div', {'data-filter-index': '5_0_1'})('span')[1].get_text()
+
+# Clearances -> Body Parts -> Head
+clear_bp_head_home = soup.find(
+    'div', {'data-filter-index': '5_1_0'})('span')[0].get_text()
+
+clear_bp_head_away = soup.find(
+    'div', {'data-filter-index': '5_1_0'})('span')[1].get_text()
+
+# Clearances -> Body Parts -> Feet
+clear_bp_feet_home = soup.find(
+    'div', {'data-filter-index': '5_1_1'})('span')[0].get_text()
+
+clear_bp_feet_away = soup.find(
+    'div', {'data-filter-index': '5_1_1'})('span')[1].get_text()
+
+# BLOCKS -> TYPE
+
+# Blocks -> Type -> Blocked Shots
+blocks_type_blocked_home = soup.find(
+    'div', {'data-filter-index': '6_0_0'})('span')[0].get_text()
+
+blocks_type_blocked_away = soup.find(
+    'div', {'data-filter-index': '6_0_0'})('span')[1].get_text()
+
+# Blocks -> Type -> Crosses
+blocks_type_crosses_home = soup.find(
+    'div', {'data-filter-index': '6_0_1'})('span')[0].get_text()
+
+blocks_type_crosses_away = soup.find(
+    'div', {'data-filter-index': '6_0_1'})('span')[1].get_text()
+
+# FOULS
+
+fouls_home = soup.find('li', {'data-filter-index': '8'})('span')[0].get_text()
+
+fouls_away = soup.find('li', {'data-filter-index': '8'})('span')[2].get_text()
+
+# ARIEL DUELS
+
+ariel_home = soup.find('li', {'data-filter-index': '9'})('span')[0].get_text()
+
+ariel_away = soup.find('li', {'data-filter-index': '9'})('span')[2].get_text()
+
+# TOUCHES
+
+touches_home = soup.find('li', {'data-filter-index': '10'})('span')[0].get_text()
+
+touches_away = soup.find('li', {'data-filter-index': '10'})('span')[2].get_text()
+
+# LOSS OF POSSESSION
+
+# Loss of possession -> Type -> Dispossessed
+lop_type_dispossessed_home = soup.find(
+    'div', {'data-filter-index': '11_0_0'})('span')[0].get_text()
+
+lop_type_dispossessed_away = soup.find(
+    'div', {'data-filter-index': '11_0_0'})('span')[1].get_text()
+
+# Loss of possession -> type -> Turnover
+lop_type_turnover_home = soup.find(
+    'div', {'data-filter-index': '11_0_1'})('span')[0].get_text()
+
+lop_type_turnover_away = soup.find(
+    'div', {'data-filter-index': '11_0_1'})('span')[1].get_text()
+
+# ERRORS
+
+# Errors -> Type -> Lead to Shot
+errors_type_shot_home = soup.find(
+    'div', {'data-filter-index': '12_0_0'})('span')[0].get_text()
+
+errors_type_shot_away = soup.find(
+    'div', {'data-filter-index': '12_0_0'})('span')[1].get_text()
+
+# Errors -> type -> Lead to Goal
+errors_type_goal_home = soup.find(
+    'div', {'data-filter-index': '12_0_1'})('span')[0].get_text()
+
+errors_type_goal_away = soup.find(
+    'div', {'data-filter-index': '12_0_1'})('span')[1].get_text()
+
+# SAVES
+
+saves_home = soup.find('li', {'data-filter-index': '13'})('span')[0].get_text()
+
+saves_away = soup.find('li', {'data-filter-index': '13'})('span')[2].get_text()
+
+# CLAIMS
+
+claims_home = soup.find('li', {'data-filter-index': '14'})('span')[0].get_text()
+
+claims_away = soup.find('li', {'data-filter-index': '14'})('span')[2].get_text()
+
+# PUNCHES
+
+punches_home = soup.find('li', {'data-filter-index': '15'})('span')[0].get_text()
+
+punches_away = soup.find('li', {'data-filter-index': '15'})('span')[2].get_text()
+
+# omg finished
+
 print "\n=============================================\n"
 print '{:20} {:^10} {:^10}'.format('STAT', 'HOME', 'AWAY')
 print "\n----- SHOTS -----\n"
@@ -441,6 +557,32 @@ print '{:20} {:^10} {:^10}'.format('successful', tackles_outcome_suc_home, tackl
 print '{:20} {:^10} {:^10}'.format('unsuccessful', tackles_outcome_un_home, tackles_outcome_un_away)
 print "\n----- INTERCEPTIONS -----\n"
 print '{:20} {:^10} {:^10}'.format('interceptions', intercpetions_home, intercpetions_away)
+print "\n----- CLEARANCES -----\n"
+print '{:20} {:^10} {:^10}'.format('total', clear_outcome_total_home, clear_outcome_total_away)
+print '{:20} {:^10} {:^10}'.format('off the line', clear_outcome_otl_home, clear_outcome_otl_away)
+print '{:20} {:^10} {:^10}'.format('head', clear_bp_head_home, clear_bp_head_away)
+print '{:20} {:^10} {:^10}'.format('feet', clear_bp_feet_home, clear_bp_feet_away)
+print "\n----- BLOCKS -----\n"
+print '{:20} {:^10} {:^10}'.format('blocked shots', blocks_type_blocked_home, blocks_type_blocked_away)
+print '{:20} {:^10} {:^10}'.format('crosses', blocks_type_crosses_home, blocks_type_crosses_away)
+print "\n----- FOULS -----\n"
+print '{:20} {:^10} {:^10}'.format('fouls', fouls_home, fouls_away)
+print "\n----- ARIEL DUELS -----\n"
+print '{:20} {:^10} {:^10}'.format('ariel duels', ariel_home, ariel_away)
+print "\n----- TOUCHES -----\n"
+print '{:20} {:^10} {:^10}'.format('touches', touches_home, touches_away)
+print "\n----- LOSS OF POSSESSION -----\n"
+print '{:20} {:^10} {:^10}'.format('dispossessed', blocks_type_blocked_home, blocks_type_blocked_away)
+print '{:20} {:^10} {:^10}'.format('turnover', blocks_type_crosses_home, blocks_type_crosses_away)
+print "\n----- ERRORS -----\n"
+print '{:20} {:^10} {:^10}'.format('lead to shot', errors_type_shot_home, errors_type_shot_away)
+print '{:20} {:^10} {:^10}'.format('lead to goal', errors_type_goal_home, errors_type_goal_away)
+print "\n----- SAVES -----\n"
+print '{:20} {:^10} {:^10}'.format('saves', saves_home, saves_away)
+print "\n----- CLAIMS -----\n"
+print '{:20} {:^10} {:^10}'.format('claims', claims_home, claims_away)
+print "\n----- PUNCHES -----\n"
+print '{:20} {:^10} {:^10}'.format('punches', punches_home, punches_away)
 
 
 browser.quit()

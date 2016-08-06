@@ -1,14 +1,5 @@
-[INFO  - 2016-08-06T01:10:02.527Z] GhostDriver - Main - running on port 60056
-[INFO  - 2016-08-06T01:10:04.067Z] Session [81a14cd0-5b72-11e6-a5cb-1124c6e96f54] - page.settings - {"XSSAuditingEnabled":false,"javascriptCanCloseWindows":true,"javascriptCanOpenWindows":true,"javascriptEnabled":true,"loadImages":true,"localToRemoteUrlAccessEnabled":false,"userAgent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/538.1 (KHTML, like Gecko) PhantomJS/2.1.1 Safari/538.1","webSecurityEnabled":true}
-[INFO  - 2016-08-06T01:10:04.067Z] Session [81a14cd0-5b72-11e6-a5cb-1124c6e96f54] - page.customHeaders:  - {}
-[INFO  - 2016-08-06T01:10:04.067Z] Session [81a14cd0-5b72-11e6-a5cb-1124c6e96f54] - Session.negotiatedCapabilities - {"browserName":"phantomjs","version":"2.1.1","driverName":"ghostdriver","driverVersion":"1.2.0","platform":"windows-7-32bit","javascriptEnabled":true,"takesScreenshot":true,"handlesAlerts":false,"databaseEnabled":false,"locationContextEnabled":false,"applicationCacheEnabled":false,"browserConnectionEnabled":false,"cssSelectorsEnabled":true,"webStorageEnabled":false,"rotatable":false,"acceptSslCerts":false,"nativeEvents":true,"proxy":{"proxyType":"direct"}}
-[INFO  - 2016-08-06T01:10:04.067Z] SessionManagerReqHand - _postNewSessionCommand - New Session Created: 81a14cd0-5b72-11e6-a5cb-1124c6e96f54
-[ERROR - 2016-08-06T01:10:16.044Z] Session [81a14cd0-5b72-11e6-a5cb-1124c6e96f54] - page.onError - msg: ReferenceError: Can't find variable: s
-
-  phantomjs://platform/console++.js:263 in error
-[ERROR - 2016-08-06T01:10:16.044Z] Session [81a14cd0-5b72-11e6-a5cb-1124c6e96f54] - page.onError - stack:
-  global code (https://tpc.googlesyndication.com/safeframe/1-0-4/html/container.html#xpc=sf-gdn-exp-1&p=https%3A//www.whoscored.com:9)
-  write (:0)
-  (anonymous function) (https://tpc.googlesyndication.com/safeframe/1-0-4/html/container.html#xpc=sf-gdn-exp-1&p=https%3A//www.whoscored.com:15)
-
-  phantomjs://platform/console++.js:263 in error
+[INFO  - 2016-08-06T01:49:25.217Z] GhostDriver - Main - running on port 62918
+[INFO  - 2016-08-06T01:49:26.700Z] Session [01de5550-5b78-11e6-9225-75f5e24cc613] - page.settings - {"XSSAuditingEnabled":false,"javascriptCanCloseWindows":true,"javascriptCanOpenWindows":true,"javascriptEnabled":true,"loadImages":true,"localToRemoteUrlAccessEnabled":false,"userAgent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/538.1 (KHTML, like Gecko) PhantomJS/2.1.1 Safari/538.1","webSecurityEnabled":true}
+[INFO  - 2016-08-06T01:49:26.700Z] Session [01de5550-5b78-11e6-9225-75f5e24cc613] - page.customHeaders:  - {}
+[INFO  - 2016-08-06T01:49:26.700Z] Session [01de5550-5b78-11e6-9225-75f5e24cc613] - Session.negotiatedCapabilities - {"browserName":"phantomjs","version":"2.1.1","driverName":"ghostdriver","driverVersion":"1.2.0","platform":"windows-7-32bit","javascriptEnabled":true,"takesScreenshot":true,"handlesAlerts":false,"databaseEnabled":false,"locationContextEnabled":false,"applicationCacheEnabled":false,"browserConnectionEnabled":false,"cssSelectorsEnabled":true,"webStorageEnabled":false,"rotatable":false,"acceptSslCerts":false,"nativeEvents":true,"proxy":{"proxyType":"direct"}}
+[INFO  - 2016-08-06T01:49:26.700Z] SessionManagerReqHand - _postNewSessionCommand - New Session Created: 01de5550-5b78-11e6-9225-75f5e24cc613
