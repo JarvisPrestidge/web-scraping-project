@@ -48,7 +48,7 @@ time.sleep(5)
 el = browser.find_element_by_xpath(
     '//a[@class="previous button ui-state-default rc-l is-default"]')
 
-print "\nTravelling back in time...\n"
+print "\nTraversing back through league months...\n"
 
 while True:
 
@@ -61,7 +61,6 @@ while True:
         WebDriverWait(browser, delay).until(
             EC.presence_of_element_located((
                 By.ID, 'tournament-fixture-wrapper')))
-        print "Page is ready!"
     except TimeoutException:
         print "Loading took too much time!"
     except Exception:
@@ -82,7 +81,6 @@ while True:
 
 print "Successfully reached start of season."
 
-print "Removing scripts..."
 # Removing script tag for visiblitly"
 [s.extract() for s in soup('script')]
 
@@ -90,10 +88,6 @@ print "Removing scripts..."
 # =============
 # Scraping
 # =============
-
-# Creating named tuple object to hold pertinent data
-Fixtures = collections.namedtuple(
-    'Fixtures', 'date week kickoff home away url')
 
 print "\nCommencing fixture scraping per month.\n"
 
@@ -120,6 +114,13 @@ break_check = False
 week_counter = 0
 date_counter = initial_date_str
 
+# The one list to hold them all!
+fixtures = list()
+
+# Creating named tuple object to hold pertinent data
+Fixture = collections.namedtuple(
+    'Fixtures', 'date week kickoff home away url')
+
 # Looping through each month
 while True:
     print "Current month: " + soup.find(
@@ -128,13 +129,14 @@ while True:
     # Gathering list of all fixture rows
     rows = soup.find('table', id='tournament-fixture')('tr')
 
-    print "\nFixtures captured: " + str(len(rows))
+    fixture_counter = 0
 
     for row in rows:
         # For each row we either append to 'Fixtures' or record date
         if row.find('th') is None:
+            fixture_counter += 1
             # Fixture - we collect pertinent info
-            Fixtures(
+            fixtures.append(Fixture(
                 date=date_counter,
                 week=week_counter,
                 kickoff=row.find('td', {'class': 'time'}).get_text(),
@@ -142,7 +144,7 @@ while True:
                 away=row('a', {'class': 'team-link '})[1].get_text(),
                 url=row.find(
                     'a', {'class': 'match-link match-report rc'}).get('href')
-            )
+            ))
             # somehow append this tuple to list
             continue
         else:
@@ -150,6 +152,8 @@ while True:
             week_counter = week(strtodate(row.get_text()))
             date_counter = row.get_text()
             continue
+
+    print "Fixtures captured: " + str(fixture_counter)
 
     # Check if this was the last page
     if break_check is True:
@@ -171,7 +175,6 @@ while True:
         WebDriverWait(browser, delay).until(
             EC.presence_of_element_located((
                 By.ID, 'tournament-fixture-wrapper')))
-        print "Page is ready!"
     except TimeoutException:
         print "Loading took too much time!"
     except Exception:
@@ -182,7 +185,20 @@ while True:
     # Parsing the content using the default python html parser
     soup = BeautifulSoup(browser.page_source, 'html.parser')
 
-    if soup.find('a', {'class': 'next button ui-state-default rc-r is-disabled'}) is None:
+    if soup.find('a', {'class': 'next button ui-state-default rc-r is-disabled'}) is not None:
         break_check = True
 
-print "Finished scraping fixture data!"
+print "\nFinished scraping fixture data!"
+print "====================================\n"
+
+for num, match in enumerate(fixtures):
+    print "Match #" + str(num)
+    print "date: " + match.date
+    print "week: " + str(match.week)
+    print "kickoff: " + match.kickoff
+    print "home: " + match.home
+    print "away: " + match.away
+    print "url: " + match.url
+    print "\n====================================\n"
+
+print "omg done"
