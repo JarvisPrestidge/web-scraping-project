@@ -18,25 +18,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
-League = collections.namedtuple('League', 'name url')
-
-leagues = [League(name='Premier League', url='/Regions/252/Tournaments/2'),
-           League(name='FA Cup', url='/Regions/252/Tournaments/26'),
-           League(name='League Cup', url='/Regions/252/Tournaments/29'),
-           League(name='Community Shield', url='/Regions/252/Tournaments/96'),
-           League(name='Championship', url='/Regions/252/Tournaments/7'),
-           League(name='League 1', url='/Regions/252/Tournaments/8'),
-           League(name='League 2', url='/Regions/252/Tournaments/9'),
-           League(name='National League Premier',
-                  url='/Regions/252/Tournaments/70'),
-           League(name='National League', url='/Regions/252/Tournaments/314'),
-           League(name='Regional League', url='/Regions/252/Tournaments/315'),
-           League(name='Johnstones Paint Trophy',
-                  url='/Regions/252/Tournaments/23'),
-           League(name='Professional Development League',
-                  url='/Regions/252/Tournaments/389'),
-           League(name='FA Trophy', url='/Regions/252/Tournaments/479')]
-
 verbose = False
 
 base_url = "https://www.whoscored.com"
@@ -60,6 +41,32 @@ else:
     raise SystemExit
 
 print "\n================================================================\n"
+
+print "Loading available leagues...\n"
+
+browser = webdriver.PhantomJS(phantomjs_path)
+# The home url of the english leagues
+browser.get(base_url + "/Regions/252/Tournaments/2")
+time.sleep(10)
+
+# Parsing the content using the default python html parser
+soup = BeautifulSoup(browser.page_source, 'html.parser')
+
+# Removing script tag for visiblitly
+[s.extract() for s in soup('script')]
+
+# Getting list of 'select' combo box tags
+league_soup = soup.find('select', {'id': 'tournaments'})('option')
+
+# Creating a tuple to hold seasons and respective urls
+League = collections.namedtuple('League', 'name url')
+
+# Creating a list to hold said tuple seasons
+leagues = list()
+
+# Adding each season and url to a tuple and then appending to list
+for option in league_soup:
+    leagues.append(League(name=option.get_text(), url=option.get('value')))
 
 print "League\n"
 
@@ -101,14 +108,14 @@ soup = BeautifulSoup(browser.page_source, 'html.parser')
 season_soup = soup.find('select', {'id': 'seasons'})('option')
 
 # Creating a tuple to hold seasons and respective urls
-Season = collections.namedtuple('Season', 'season url')
+Season = collections.namedtuple('Season', 'name url')
 
 # Creating a list to hold said tuple seasons
 seasons = list()
 
 # Adding each season and url to a tuple and then appending to list
-for tag in season_soup:
-    seasons.append(Season(season=tag.get_text(), url=tag.get('value')))
+for option in season_soup:
+    seasons.append(Season(name=option.get_text(), url=option.get('value')))
 
 print "Season\n"
 
@@ -119,13 +126,13 @@ while True:
     count = 0
     for season in seasons:
         count += 1
-        print '{:3}: {:20}'.format(str(count), season.season)
+        print '{:3}: {:20}'.format(str(count), season.name)
     q2_input = raw_input("\nPlease select a season: ")
     if q2_input.isdigit() and \
        (int(q2_input) > 0 and int(q2_input) <= len(seasons)):
         # Creating season url global variable
         season_url = base_url + seasons[int(q2_input) - 1].url
-        season_str = seasons[int(q2_input) - 1].season
+        season_str = seasons[int(q2_input) - 1].name
         print "\nAccepted."
         # Exiting the loop
         break
@@ -136,15 +143,15 @@ print("\n================================================================\n")
 
 while True:
     q3_input = raw_input("Would you like to print scraped data to the "
-                         "console in a human \nreadable format? (y/n) ")
-    if q3_input == 'y':
+                         "console in a human \nreadable format? (Y/n) ")
+    if q3_input.lower() == 'y' or q3_input == "":
         print "\nAccepted."
         verbose = True
         break
-    elif q3_input == 'n':
+    elif q3_input.lower() == 'n':
         break
     else:
-        print("\nPlease enter either <y> or <n> only.")
+        print("\nPlease enter either <y> or <n> only.\n")
 
 print("\n================================================================\n")
 
@@ -167,17 +174,26 @@ fixture_url = base_url + \
 browser.get(fixture_url)
 time.sleep(10)
 
+# Parsing the content using the default python html parser
+soup = BeautifulSoup(browser.page_source, 'html.parser')
+
 print "Success!"
 
 print("\n================================================================\n")
 
 print "Travelling back through season months...\n"
 
-# Get handle to "previous" button
-el = browser.find_element_by_xpath(
-    '//a[@class="previous button ui-state-default rc-l is-default"]')
-
 while True:
+
+    # Test if no more months to back track through
+    if soup.find('a',
+                 {'class': 'previous button ui-state-default rc-l is-disabled'}) is None:
+        # Get handle to "previous" button
+        browser.save_screenshot('screenshot.png')
+        el = browser.find_element_by_xpath(
+            '//a[@class="previous button ui-state-default rc-l is-default"]')
+    else:
+        break
 
     # Perform click
     webdriver.ActionChains(browser).move_to_element(el).click(el).perform()
@@ -201,12 +217,6 @@ while True:
     # Print month
     print soup.find(
         'a', {'id': 'date-config-toggle-button'})('span')[0].get_text() + "\n"
-
-    if soup.find('a',
-       {'class': 'previous button ui-state-default rc-l is-disabled'}) is None:
-        continue
-    else:
-        break
 
 print "Successfully reached start of " + season_str + " season."
 
@@ -264,6 +274,12 @@ while True:
         # For each row we either append to 'Fixtures' or record date
         if row.find('th') is None:
             fixture_counter += 1
+
+            # Test if fixture has been played yet
+            if row.find('a', {'class': 'match-link match-report rc'}) is None:
+                break_check = True
+                break
+
             # Fixture - we collect pertinent info
             fixtures.append(Fixture(
                 date=date_counter,
@@ -316,7 +332,8 @@ while True:
        {'class': 'next button ui-state-default rc-r is-disabled'}) is not None:
         break_check = True
 
-print "\nFinished scraping fixture data!"
+print "\nFinished scraping fixture meta data!\n"
+
 print "====================================\n"
 
 for num, match in enumerate(fixtures):
