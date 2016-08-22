@@ -336,15 +336,16 @@ print "\nFinished scraping fixture meta data!\n"
 
 print "====================================\n"
 
-for num, match in enumerate(fixtures):
-    print "Match #" + str(num)
-    print "date: " + match.date
-    print "week: " + str(match.week)
-    print "kickoff: " + match.kickoff
-    print "home: " + match.home
-    print "away: " + match.away
-    print "url: " + match.url
-    print "\n====================================\n"
+if verbose:
+    for num, match in enumerate(fixtures):
+        print "Match #" + str(num)
+        print "date: " + match.date
+        print "week: " + str(match.week)
+        print "kickoff: " + match.kickoff
+        print "home: " + match.home
+        print "away: " + match.away
+        print "url: " + match.url
+        print "\n====================================\n"
 
 
 print "Commencing individual fixure data scraping...\n"
@@ -477,16 +478,16 @@ for match in fixtures:
     home_fixtures.append(shots_zones_6yard_home)
 
     shots_zones_6yard_away = soup.find(
-        'div', {'data-filter-index': '0_1_1'})('span')[1].get_text()
+        'div', {'data-filter-index': '0_1_0'})('span')[1].get_text()
     away_fixtures.append(shots_zones_6yard_away)
 
     # Shots -> Zones -> Penalty Area
     shots_zones_penalty_home = soup.find(
-        'div', {'data-filter-index': '0_1_2'})('span')[0].get_text()
+        'div', {'data-filter-index': '0_1_1'})('span')[0].get_text()
     home_fixtures.append(shots_zones_penalty_home)
 
     shots_zones_penalty_away = soup.find(
-        'div', {'data-filter-index': '0_1_2'})('span')[1].get_text()
+        'div', {'data-filter-index': '0_1_1'})('span')[1].get_text()
     away_fixtures.append(shots_zones_penalty_away)
 
     # Shots -> Zones -> Outside of Box
@@ -874,6 +875,16 @@ for match in fixtures:
         'div', {'data-filter-index': '6_0_1'})('span')[1].get_text()
     away_fixtures.append(blocks_type_crosses_away)
 
+    # OFFSIDES
+
+    offsides_home = soup.find(
+        'li', {'data-filter-index': '7'})('span')[0].get_text()
+    home_fixtures.append(offsides_home)
+
+    offsides_away = soup.find(
+        'li', {'data-filter-index': '7'})('span')[2].get_text()
+    away_fixtures.append(offsides_away)
+
     # FOULS
 
     fouls_home = soup.find(
@@ -1136,5 +1147,5 @@ print "\nFinished!\n"
 print "The output.csv file will be located in the same directory "
 print "in which you ran this script.\n"
 
-print "Exiting..."
+print "Exiting...\n"
 raise SystemExit
