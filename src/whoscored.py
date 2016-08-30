@@ -10,6 +10,7 @@ import time
 import csv
 
 from datetime import timedelta, datetime
+from sys import stdout
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -18,6 +19,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
+# from selenium.common.exceptions import StaleElementReferenceException
+
 
 verbose = False
 
@@ -29,35 +32,38 @@ print "\nTaran's whoscored.com webscraping script.\n"
 # under different operating systems
 if platform.system() == 'Windows':
     print "Windows OS detected"
-    phantomjs_path = './phantomjs.exe'
+    phantomjs_path = './phantomjs/windows/phantomjs.exe'
 else:
     print "UNIX derived OS deteceted"
-    phantomjs_path = './phantomjs'
+    phantomjs_path = './phantomjs/linux/phantomjs'
 
-if os.path.isfile('./phantomjs.exe'):
+if os.path.isfile(phantomjs_path):
     print "Found phantomjs headless webkit"
 else:
-    print "Can not find phantomjs in current directory"
-    print("Exiting...")
+    print "\nCannot find phantomjs in current directory..."
+    print("\nExiting...")
     raise SystemExit
 
 print "\n================================================================\n"
 
-print "Loading available leagues...\n"
+print "Loading available leagues..."
 
+# Providing selenium with the phantomjs binary
 browser = webdriver.PhantomJS(phantomjs_path)
-# The home url of the english leagues
+
+# Building and laoding home url of the english leagues
 browser.get(base_url + "/Regions/252/Tournaments/2")
-time.sleep(10)
 
-# Parsing the content using the default python html parser
-soup = BeautifulSoup(browser.page_source, 'html.parser')
-
-# Removing script tag for visiblitly
-[s.extract() for s in soup('script')]
-
-# Getting list of 'select' combo box tags
-league_soup = soup.find('select', {'id': 'tournaments'})('option')
+while True:
+    # Iteratively checking data has loaded
+    try:
+        league_soup = BeautifulSoup(browser.page_source, 'html.parser') \
+            .find('select', {'id': 'tournaments'})('option')
+        break
+    except TypeError:
+        print "."
+        time.sleep(0.1)
+        continue
 
 # Creating a tuple to hold seasons and respective urls
 League = collections.namedtuple('League', 'name url')
@@ -69,7 +75,7 @@ leagues = list()
 for option in league_soup:
     leagues.append(League(name=option.get_text(), url=option.get('value')))
 
-print "League\n"
+print "\nLeague\n"
 
 league_url = ""
 league_str = ""
@@ -95,18 +101,19 @@ print "\n================================================================\n"
 
 print "Loading available seasons based on league selection...\n"
 
-browser = webdriver.PhantomJS(phantomjs_path)
+# Loading league specific url
 browser.get(league_url)
-time.sleep(10)
 
-# Parsing the content using the default python html parser
-soup = BeautifulSoup(browser.page_source, 'html.parser')
-
-# Removing script tag for visiblitly
-[s.extract() for s in soup('script')]
-
-# Getting list of 'select' combo box tags
-season_soup = soup.find('select', {'id': 'seasons'})('option')
+while True:
+    # Iteratively checking data has loaded
+    try:
+        season_soup = BeautifulSoup(browser.page_source, 'html.parser') \
+            .find('select', {'id': 'seasons'})('option')
+        break
+    except TypeError:
+        print "."
+        time.sleep(0.1)
+        continue
 
 # Creating a tuple to hold seasons and respective urls
 Season = collections.namedtuple('Season', 'name url')
@@ -160,19 +167,25 @@ print "Fetching data...\n"
 
 # Loading page based on chosen season
 browser.get(season_url)
-time.sleep(10)
 
-# Parsing the content using the default python html parser
-soup = BeautifulSoup(browser.page_source, 'html.parser')
+while True:
+    # Iteratively checking data has loaded
+    try:
+        fix_link = BeautifulSoup(browser.page_source, 'html.parser') \
+            .find('div', {'id': 'sub-navigation'})('a')[1].get('href')
+        break
+    except TypeError:
+        print "."
+        time.sleep(0.1)
+        continue
 
-# Removing script tag for visiblitly
-[s.extract() for s in soup('script')]
 
 # Getting fixture page url
-fixture_url = base_url + \
-    soup.find('div', {'id': 'sub-navigation'})('a')[1].get('href')
-
+fixture_url = base_url + fix_link
 browser.get(fixture_url)
+
+# CONTINUE FROM HERE, YOU'RE DOING WELL ^^ xxx
+
 time.sleep(10)
 
 # Parsing the content using the default python html parser
@@ -376,7 +389,7 @@ for match in fixtures:
         except NoSuchElementException, e:
             browser.save_screenshot('screenshot.png')
             print ".",
-            time.sleep(1)
+            time.sleep(0.1)
             continue
 
     # Attempting to give the browser enough time to load the page
@@ -388,20 +401,6 @@ for match in fixtures:
         print "Loading took too much time!"
     except Exception:
         print "Unknown exception occureed!"
-
-    def click_through_to_new_page(link_text):
-        link = browser.find_element_by_xpath('//a[@href="#chalkboard"]')
-        link.click()
-
-    def link_has_gone_stale():
-        try:
-            # poll the link with an arbitrary call
-            link.find_elements_by_id('doesnt-matter') 
-            return False
-        except StaleElementReferenceException:
-            return True
-
-        wait_for(link_has_gone_stale)
 
     # Parsing the content using the default python html parser
     soup = BeautifulSoup(browser.page_source, 'html.parser')
@@ -1171,3 +1170,30 @@ print "in which you ran this script.\n"
 
 print "Exiting...\n"
 raise SystemExit
+
+# def wait_for(condition_function):
+#     start_time = time.time()
+#     while time.time() < start_time + 10:
+#         if condition_function():
+#             return True
+#         else:
+#             time.sleep(0.1)
+#     raise Exception(
+#         'Timeout waiting for {}'.format(condition_function.__name__)
+#     )
+
+
+# # Function to wait for a stale element to be found
+# def click_through_to_new_page(link_text):
+#     link = browser.find_element_by_link_text('my link')
+#     link.click()
+
+#     def link_has_gone_stale():
+#         try:
+#             # poll the link with an arbitrary call
+#             link.find_elements_by_id('doesnt-matter')
+#             return False
+#         except StaleElementReferenceException:
+#             return True
+
+#     wait_for(link_has_gone_stale)
