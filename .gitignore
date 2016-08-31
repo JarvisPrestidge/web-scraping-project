@@ -21,6 +21,18 @@
 **/*.log
 
 
+# Images #
+##########
+
+**/*.png
+
+
+# Output Files #
+################
+
+**/*.csv
+
+
 # OS generated files #
 ######################
 

@@ -8,21 +8,26 @@ import platform
 import os
 import time
 import csv
+import atexit
 
 from datetime import timedelta, datetime
-from sys import stdout
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 # from selenium.common.exceptions import StaleElementReferenceException
 
 
+# Ensuring the PhantomJS browser instance is closed on program exit
+def exit_handler():
+    # Stop the webkit browser process
+    browser.quit()
+
+# Registering the handler
+atexit.register(exit_handler)
+
 verbose = False
+debug = False
 
 base_url = "https://www.whoscored.com"
 
@@ -32,9 +37,11 @@ print "\nTaran's whoscored.com webscraping script.\n"
 # under different operating systems
 if platform.system() == 'Windows':
     print "Windows OS detected"
+    platform = "windows"
     phantomjs_path = './phantomjs/windows/phantomjs.exe'
 else:
     print "UNIX derived OS deteceted"
+    platform = "linux"
     phantomjs_path = './phantomjs/linux/phantomjs'
 
 if os.path.isfile(phantomjs_path):
@@ -61,7 +68,6 @@ while True:
             .find('select', {'id': 'tournaments'})('option')
         break
     except TypeError:
-        print "."
         time.sleep(0.1)
         continue
 
@@ -111,7 +117,6 @@ while True:
             .find('select', {'id': 'seasons'})('option')
         break
     except TypeError:
-        print "."
         time.sleep(0.1)
         continue
 
@@ -157,6 +162,39 @@ while True:
         verbose = True
         break
     elif q3_input.lower() == 'n':
+        print "\nAccepted."
+        break
+    else:
+        print("\nPlease enter either <y> or <n> only.\n")
+
+print("\n================================================================\n")
+
+while True:
+    q4_input = raw_input("Would you like to overwrite (y) or append (n) to "
+                         "existing csv \noutput file? (Y/n) ")
+    if q4_input.lower() == 'y' or q4_input == "":
+        print "\nAccepted."
+        with open("./output/output.csv", "wb") as csvfile:
+            # Overwriting file then exit
+            pass
+        break
+    elif q4_input.lower() == 'n':
+        print "\nAccepted."
+        break
+    else:
+        print("\nPlease enter either <y> or <n> only.\n")
+
+print("\n================================================================\n")
+
+while True:
+    q5_input = raw_input("Run in debug mode? (This is only for development, "
+                         "set this to \noff otherwise) (N/y) ")
+    if q5_input.lower() == 'y':
+        print "\nAccepted."
+        debug = True
+        break
+    elif q5_input.lower() == 'n' or q5_input == "":
+        print "\nAccepted."
         break
     else:
         print("\nPlease enter either <y> or <n> only.\n")
@@ -175,7 +213,6 @@ while True:
             .find('div', {'id': 'sub-navigation'})('a')[1].get('href')
         break
     except TypeError:
-        print "."
         time.sleep(0.1)
         continue
 
@@ -184,12 +221,16 @@ while True:
 fixture_url = base_url + fix_link
 browser.get(fixture_url)
 
-# CONTINUE FROM HERE, YOU'RE DOING WELL ^^ xxx
-
-time.sleep(10)
-
-# Parsing the content using the default python html parser
-soup = BeautifulSoup(browser.page_source, 'html.parser')
+while True:
+    # Iteratively checking data has loaded
+    try:
+        soup = BeautifulSoup(browser.page_source, 'html.parser')
+        soup.find('a', {'id':
+                        'date-config-toggle-button'})('span')[0].get_text()
+        break
+    except TypeError:
+        time.sleep(0.1)
+        continue
 
 print "Success!"
 
@@ -197,12 +238,13 @@ print("\n================================================================\n")
 
 print "Travelling back through season months...\n"
 
-while True:
+# Print initial month
+print soup.find(
+    'a', {'id': 'date-config-toggle-button'})('span')[0].get_text() + "\n"
 
+while True:
     # Test if no more months to back track through
-    if soup.find('a',
-       {'class': 'previous button ui-state-default rc-l is-disabled'}) is None:
-        # Get handle to "previous" button
+    if soup.find('a', {'title': 'View previous month'}) is not None:
         el = browser.find_element_by_xpath(
             '//a[@class="previous button ui-state-default rc-l is-default"]')
     else:
@@ -211,21 +253,20 @@ while True:
     # Perform click
     webdriver.ActionChains(browser).move_to_element(el).click(el).perform()
 
-    # Attempt to give browser enough time to load the page
-    delay = 10
-    try:
-        WebDriverWait(browser, delay).until(
-            EC.presence_of_element_located((
-                By.ID, 'tournament-fixture-wrapper')))
-    except TimeoutException:
-        print "Loading took too much time!"
-    except Exception:
-        print "Unknown exception occurred!"
+    # Vital to give the DOM time to refresh
+    time.sleep(3)
 
-    time.sleep(10)
-
-    # Parsing the content using the default python html parser
-    soup = BeautifulSoup(browser.page_source, 'html.parser')
+    while True:
+        # Iteratively checking data has loaded
+        try:
+            soup = BeautifulSoup(browser.page_source, 'html.parser')
+            soup.find('a', {'id': 'date-config-toggle-button'})('span')[0] \
+                .get_text()
+            time.sleep(1)
+            break
+        except TypeError:
+            time.sleep(0.1)
+            continue
 
     # Print month
     print soup.find(
@@ -235,14 +276,11 @@ print "Successfully reached start of " + season_str + " season."
 
 print("\n================================================================\n")
 
-# Removing script tag for visiblitly"
-[s.extract() for s in soup('script')]
-
 # =============
 # Scraping
 # =============
 
-print "Fetching fixture meta data by month\n"
+print "Fetching fixture meta data per month...\n"
 
 
 def strtodate(date_str):
@@ -275,23 +313,29 @@ Fixture = collections.namedtuple(
 
 # Looping through each month
 while True:
-    print "Current month: " + soup.find(
+
+    current_month = soup.find(
         'a', {'id': 'date-config-toggle-button'})('span')[0].get_text()
 
     # Gathering list of all fixture rows
     rows = soup.find('table', id='tournament-fixture')('tr')
 
+    if platform is "windows":
+        browser.save_screenshot("screenshot-" + current_month + ".png")
+
     fixture_counter = 0
 
     for row in rows:
+
         # For each row we either append to 'Fixtures' or record date
         if row.find('th') is None:
-            fixture_counter += 1
 
             # Test if fixture has been played yet
             if row.find('a', {'class': 'match-link match-report rc'}) is None:
                 break_check = True
                 break
+
+            fixture_counter += 1
 
             # Fixture - we collect pertinent info
             fixtures.append(Fixture(
@@ -303,7 +347,6 @@ while True:
                 url=row.find(
                     'a', {'class': 'match-link match-report rc'}).get('href')
             ))
-            # somehow append this tuple to list
             continue
         else:
             # Date header - we log the current week & date
@@ -311,7 +354,12 @@ while True:
             date_counter = row.get_text()
             continue
 
-    print "Fixtures captured: " + str(fixture_counter)
+    if fixture_counter > 0:
+        print str(fixture_counter) + \
+            " fixtures captured in " + \
+            current_month + "\n"
+    else:
+        print "No fixtures to capture in " + current_month + "\n"
 
     # Check if this was the last page
     if break_check is True:
@@ -325,29 +373,26 @@ while True:
     # Perform click
     webdriver.ActionChains(browser).move_to_element(el).click(el).perform()
 
-    # Attempting to give the browser enough time to load the page
-    delay = 10
-    try:
-        WebDriverWait(browser, delay).until(
-            EC.presence_of_element_located((
-                By.ID, 'tournament-fixture-wrapper')))
-    except TimeoutException:
-        print "Loading took too much time!"
-    except Exception:
-        print "Unknown exception occurred!"
+    # Vital to give the DOM time to refresh
+    time.sleep(3)
 
-    time.sleep(10)
+    while True:
+        # Iteratively checking data has loaded
+        try:
+            soup = BeautifulSoup(browser.page_source, 'html.parser')
+            soup.find('a', {'id': 'date-config-toggle-button'})('span')[0] \
+                .get_text()
+            break
+        except TypeError:
+            time.sleep(0.1)
+            continue
 
-    # Parsing the content using the default python html parser
-    soup = BeautifulSoup(browser.page_source, 'html.parser')
-
-    if soup.find('a',
-       {'class': 'next button ui-state-default rc-r is-disabled'}) is not None:
+    if soup.find('a', {'title': 'No data for next month'}) is not None:
         break_check = True
 
-print "\nFinished scraping fixture meta data!\n"
+print "Finished!"
 
-print "====================================\n"
+print("\n================================================================\n")
 
 if verbose:
     for num, match in enumerate(fixtures):
@@ -366,6 +411,8 @@ print "Commencing individual fixure data scraping...\n"
 
 for match in fixtures:
 
+    print "Loading javascript..."
+
     # Building url to scrape
     url = base_url + \
         match.url[:-12] + \
@@ -374,39 +421,50 @@ for match in fixtures:
         "-" + \
         str(match.away).replace(' ', '-')
 
-    print url + "\n"
+    if verbose:
+        print "\n" + url
 
     browser.get(url)
+    time.sleep(3)
 
-    print "Javascript loading.",
     count = 1
     while True:
         try:
             el = browser.find_element_by_xpath('//a[@href="#chalkboard"]')
-            webdriver.ActionChains(browser).move_to_element(el).click(el) \
-                .perform()
             break
-        except NoSuchElementException, e:
-            browser.save_screenshot('screenshot.png')
-            print ".",
+        except NoSuchElementException:
+            if platform is "windows" and debug:
+                browser.save_screenshot('screenshot-' +
+                                        match.home +
+                                        '-' +
+                                        match.away +
+                                        '.png')
             time.sleep(0.1)
             continue
 
-    # Attempting to give the browser enough time to load the page
-    delay = 10
-    try:
-        WebDriverWait(browser, delay).until(
-            EC.presence_of_element_located((By.ID, 'chalkboard-timeline')))
-    except TimeoutException:
-        print "Loading took too much time!"
-    except Exception:
-        print "Unknown exception occureed!"
-
-    # Parsing the content using the default python html parser
-    soup = BeautifulSoup(browser.page_source, 'html.parser')
-
-    # Removing script tag for visiblitly
-    [s.extract() for s in soup('script')]
+    counter = 0
+    while True:
+        # Iteratively checking data has loaded
+        try:
+            webdriver.ActionChains(browser).move_to_element(el).click(el) \
+                .perform()
+            time.sleep(counter)
+            counter += 1
+            soup = BeautifulSoup(browser.page_source, 'html.parser')
+            if not soup.find('li', {'data-filter-index': '15'})('span')[2] \
+               .get_text():
+                raise
+            break
+        except TypeError:
+            if platform is "windows" and debug:
+                browser.save_screenshot('screenshot-' +
+                                        match.home +
+                                        '-' +
+                                        match.away +
+                                        '.png')
+            print counter
+            time.sleep(0.1)
+            continue
 
     # Declaring the 2 lists to hold them all
     home_fixtures = list()
@@ -1006,8 +1064,6 @@ for match in fixtures:
         'li', {'data-filter-index': '15'})('span')[2].get_text()
     away_fixtures.append(punches_away)
 
-    print "\nCompleted: " + home + " vs. " + away + "\n"
-
     if verbose:
         # If True then print info
         print '{:20} {:^10} {:^10}'.format('STATS', 'HOME', 'AWAY')
@@ -1152,17 +1208,16 @@ for match in fixtures:
         print '{:20} {:^10} {:^10}'.format(
             'punches', punches_home, punches_away)
 
-        print "\n=============================================\n"
+    print "\nCompleted: " + home + " vs. " + away
+
+    print "\n=============================================\n"
 
     # Write this fixture as a row to csv
     # Create the csv file if it does not exist
-    with open("output.csv", "ab") as csvfile:
+    with open("./output/output.csv", "ab") as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(home_fixtures)
         writer.writerow(away_fixtures)
-
-# Stop the webkit browser process
-browser.quit()
 
 print "\nFinished!\n"
 print "The output.csv file will be located in the same directory "
@@ -1170,30 +1225,3 @@ print "in which you ran this script.\n"
 
 print "Exiting...\n"
 raise SystemExit
-
-# def wait_for(condition_function):
-#     start_time = time.time()
-#     while time.time() < start_time + 10:
-#         if condition_function():
-#             return True
-#         else:
-#             time.sleep(0.1)
-#     raise Exception(
-#         'Timeout waiting for {}'.format(condition_function.__name__)
-#     )
-
-
-# # Function to wait for a stale element to be found
-# def click_through_to_new_page(link_text):
-#     link = browser.find_element_by_link_text('my link')
-#     link.click()
-
-#     def link_has_gone_stale():
-#         try:
-#             # poll the link with an arbitrary call
-#             link.find_elements_by_id('doesnt-matter')
-#             return False
-#         except StaleElementReferenceException:
-#             return True
-
-#     wait_for(link_has_gone_stale)
